@@ -5,16 +5,21 @@ import express, {
   type Response,
 } from "express";
 import { verifyRouter } from "./routes/verify.js";
+import { apiKeyAuth } from "./middleware/auth.js";
+import { config } from "./config.js";
 
 export function createApp(): Express {
   const app = express();
 
   app.use(express.json({ limit: "256kb" }));
 
+  // Public: liveness probe, no auth required.
   app.get("/health", (_req: Request, res: Response) => {
     res.json({ status: "ok" });
   });
 
+  // Everything below requires a valid API key (unless none are configured).
+  app.use(apiKeyAuth(config.apiKeys));
   app.use(verifyRouter);
 
   // 404 handler.

@@ -31,17 +31,49 @@ npm run build && npm start
 ```
 
 Environment variables: `PORT` (3000), `HOST` (0.0.0.0), `DNS_TIMEOUT_MS` (5000),
-`MAX_BATCH_SIZE` (100).
+`MAX_BATCH_SIZE` (100), `API_KEYS` (comma-separated, see below).
+
+## Authentication
+
+All endpoints except `GET /health` require an API key. Configure accepted keys
+via the `API_KEYS` env var (comma-separated):
+
+```dotenv
+API_KEYS=key-one,key-two
+```
+
+Generate a strong key:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Clients send the key in either form:
+
+```bash
+curl -H 'X-API-Key: key-one' ...
+curl -H 'Authorization: Bearer key-one' ...
+```
+
+Responses: `401` when no key is presented, `403` when the key is invalid. Keys
+are compared in constant time. If `API_KEYS` is empty, auth is **disabled** (a
+startup warning is logged) — intended for local development only.
 
 ## API
 
-### `GET /health`
+### `GET /health`  *(public, no key)*
 ```json
 { "status": "ok" }
 ```
 
-### `POST /verify`
+### `POST /verify`  *(requires API key)*
 Body: `{ "email": "john@gmail.com", "skipDns": false }`
+
+```bash
+curl -X POST http://localhost:3000/verify \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: key-one' \
+  -d '{"email": "john.doe@gmail.com"}'
+```
 
 ```jsonc
 {
