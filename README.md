@@ -58,6 +58,38 @@ Responses: `401` when no key is presented, `403` when the key is invalid. Keys
 are compared in constant time. If `API_KEYS` is empty, auth is **disabled** (a
 startup warning is logged) — intended for local development only.
 
+## Production (PM2)
+
+The repo ships an `ecosystem.config.cjs` that runs the compiled app in cluster
+mode across all CPU cores, with auto-restart and a memory ceiling. It holds **no
+environment values** — the app loads its own `.env` at startup (see
+`src/env.ts`), so all config/secrets live in exactly one place.
+
+```bash
+# one-time: install PM2 globally
+npm install -g pm2
+
+# build + (re)start under PM2 — also use this to deploy new versions
+npm run build
+npm run pm2:start        # first launch
+npm run pm2:reload       # zero-downtime reload after a rebuild
+
+# or do build + ci + start/reload in one shot
+npm run deploy
+
+# survive reboots
+pm2 save
+pm2 startup              # follow the printed instructions
+
+# operations
+npm run pm2:logs         # tail logs
+pm2 status               # process list
+npm run pm2:stop         # stop
+```
+
+Make sure a production `.env` exists (at least `API_KEYS`) next to the app
+before starting; see `.env.example`.
+
 ## API
 
 ### `GET /health`  *(public, no key)*

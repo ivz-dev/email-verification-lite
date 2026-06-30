@@ -1,3 +1,5 @@
+// Must come first: loads .env into process.env before config is evaluated.
+import "./env.js";
 import { createApp } from "./server.js";
 import { config } from "./config.js";
 
