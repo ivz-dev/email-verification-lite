@@ -84,3 +84,30 @@ test("accepts valid key via Authorization: Bearer", async () => {
     server.close();
   }
 });
+
+test("GET /verify works with query params and a valid key", async () => {
+  const { server, base } = await startServer();
+  try {
+    const res = await fetch(
+      `${base}/verify?email=user@example.com&skipDns=true`,
+      { headers: { "X-API-Key": "secret-key-aaa" } },
+    );
+    assert.equal(res.status, 200);
+    const json = (await res.json()) as { normalizedEmail: string };
+    assert.equal(json.normalizedEmail, "user@example.com");
+  } finally {
+    server.close();
+  }
+});
+
+test("GET /verify without email -> 400", async () => {
+  const { server, base } = await startServer();
+  try {
+    const res = await fetch(`${base}/verify`, {
+      headers: { "X-API-Key": "secret-key-aaa" },
+    });
+    assert.equal(res.status, 400);
+  } finally {
+    server.close();
+  }
+});

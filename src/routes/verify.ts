@@ -8,6 +8,15 @@ const singleSchema = z.object({
   skipDns: z.boolean().optional(),
 });
 
+// Query params arrive as strings, so skipDns is coerced from "true"/"false".
+const querySchema = z.object({
+  email: z.string().min(1, "email is required").max(320),
+  skipDns: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => v === "true"),
+});
+
 const batchSchema = z.object({
   emails: z
     .array(z.string().min(1).max(320))
@@ -17,6 +26,20 @@ const batchSchema = z.object({
 });
 
 export const verifyRouter = Router();
+
+/** GET /verify?email=...&skipDns=true — verify a single address via query params. */
+verifyRouter.get("/verify", async (req: Request, res: Response) => {
+  const parsed = querySchema.safeParse(req.query);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid request", details: parsed.error.flatten() });
+  }
+
+  const result = await verifyEmail(parsed.data.email, {
+    skipDns: parsed.data.skipDns,
+    dnsTimeoutMs: config.dnsTimeoutMs,
+  });
+  return res.json(result);
+});
 
 /** POST /verify — verify a single address. */
 verifyRouter.post("/verify", async (req: Request, res: Response) => {

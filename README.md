@@ -97,6 +97,17 @@ before starting; see `.env.example`.
 { "status": "ok" }
 ```
 
+### `GET /verify`  *(requires API key)*
+Query params: `email` (required), `skipDns` (`true`/`false`, optional).
+
+```bash
+curl 'http://localhost:3000/verify?email=john.doe@gmail.com' \
+  -H 'X-API-Key: key-one'
+```
+
+Same response shape as `POST /verify`. Handy for quick checks and API gateways
+that prefer URL parameters.
+
 ### `POST /verify`  *(requires API key)*
 Body: `{ "email": "john@gmail.com", "skipDns": false }`
 

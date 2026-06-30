@@ -11,7 +11,11 @@ import { config } from "./config.js";
 export function createApp(): Express {
   const app = express();
 
-  app.use(express.json({ limit: "256kb" }));
+  // Parse JSON bodies. `type: () => true` parses the body as JSON regardless of
+  // the Content-Type header, so requests from API gateways that omit
+  // "Content-Type: application/json" (e.g. Zyla) are still understood. Bodies
+  // that are not valid JSON fall through to the error handler as a 400.
+  app.use(express.json({ limit: "256kb", type: () => true }));
 
   // Public: liveness probe, no auth required.
   app.get("/health", (_req: Request, res: Response) => {
